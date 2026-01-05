@@ -3,7 +3,13 @@ import json, os, requests
 from supabase import create_client, Client
 from datetime import datetime, timedelta
 
-app = Flask(__name__, template_folder='templates')
+app = Flask(
+    __name__,
+    template_folder='templates',
+    static_folder='static',
+    static_url_path='/static'
+)
+
 app.secret_key = 'amakha_paris_secret_key_2024'
 
 # ================= SUPABASE CONFIG =================
