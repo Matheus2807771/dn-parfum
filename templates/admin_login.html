@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Admin - Amakha Paris</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: 'Segoe UI', Arial, sans-serif;
+  background: linear-gradient(180deg, #0b1022, #060914);
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+}
+.login-container {
+  background: #141937;
+  padding: 40px;
+  border-radius: 20px;
+  width: 100%;
+  max-width: 400px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+}
+.logo { text-align: center; margin-bottom: 30px; }
+.logo h1 { font-size: 28px; color: #23c483; }
+.logo p { color: #888; font-size: 14px; margin-top: 5px; }
+.form-group { margin-bottom: 20px; }
+.form-group label { display: block; margin-bottom: 8px; color: #ccc; font-size: 14px; }
+.form-group input {
+  width: 100%;
+  padding: 14px 16px;
+  border: 2px solid #2b3055;
+  border-radius: 10px;
+  background: #0b1022;
+  color: #fff;
+  font-size: 16px;
+}
+.form-group input:focus { outline: none; border-color: #23c483; }
+.btn-login {
+  width: 100%;
+  padding: 14px;
+  background: #23c483;
+  color: #000;
+  border: none;
+  border-radius: 10px;
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+}
+.btn-login:hover { background: #1da86d; }
+.erro { background: #ff4444; color: #fff; padding: 12px; border-radius: 8px; margin-bottom: 20px; text-align: center; }
+.back-link { display: block; text-align: center; margin-top: 20px; color: #888; text-decoration: none; }
+.back-link:hover { color: #23c483; }
+</style>
+</head>
+<body>
+<div class="login-container">
+  <div class="logo">
+    <h1>Amakha Paris</h1>
+    <p>Painel Administrativo</p>
+  </div>
+  {% if erro %}<div class="erro">{{ erro }}</div>{% endif %}
+  <form method="POST">
+    <div class="form-group">
+      <label for="password">Senha de Acesso</label>
+      <input type="password" id="password" name="password" placeholder="Digite a senha" required autofocus>
+    </div>
+    <button type="submit" class="btn-login">Entrar</button>
+  </form>
+  <a href="/" class="back-link">Voltar para o site</a>
+</div>
+</body>
+</html>

@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Kits Amakha Paris</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<style>
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: linear-gradient(180deg,#0b1022,#060914);
+  color: #fff;
+}
+
+.container {
+  max-width: 980px;
+  margin: auto;
+  padding: 20px;
+}
+
+h1 { font-size: 22px; margin-bottom: 12px; }
+
+select,input {
+  width: 100%;
+  padding: 12px;
+  border-radius: 10px;
+  border: none;
+  margin-bottom: 12px;
+  font-size: 14px;
+}
+
+/* filtros */
+.filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.filters button {
+  padding: 8px 14px;
+  border-radius: 20px;
+  border: none;
+  background: #1e2447;
+  color: #fff;
+  cursor: pointer;
+}
+
+.filters button.active {
+  background: #23c483;
+  color: #000;
+  font-weight: bold;
+}
+
+/* lista */
+.lista {
+  background: #141937;
+  border-radius: 14px;
+  max-height: 480px;
+  overflow-y: auto;
+}
+
+.item {
+  display: flex;
+  justify-content: space-between;
+  padding: 12px;
+  border-bottom: 1px solid #1f2550;
+}
+
+.nome { font-size: 14px; }
+.tipo { font-size: 12px; color: #aaa; }
+
+.ml {
+  background: #ffb703;
+  color: #000;
+  font-size: 11px;
+  font-weight: bold;
+  padding: 2px 6px;
+  border-radius: 6px;
+  margin-left: 6px;
+}
+
+.qtd { display: flex; align-items: center; gap: 6px; }
+
+.qtd button {
+  width: 30px; height: 30px;
+  border-radius: 50%;
+  border: none;
+  background: #2b2f55;
+  color: #fff;
+}
+
+.qtd input {
+  width: 44px;
+  text-align: center;
+  border-radius: 6px;
+  border: none;
+}
+
+/* cards */
+.resumo {
+  margin-top: 18px;
+  background: #141937;
+  padding: 14px;
+  border-radius: 14px;
+  font-size: 14px;
+}
+
+.resumo h3 { margin-top: 0; }
+
+/* botão limpar */
+.btn-danger {
+  width: 100%;
+  margin-top: 12px;
+  padding: 12px;
+  border-radius: 10px;
+  border: none;
+  background: #b32222;
+  color: #ffffff;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.btn-danger:hover { background:#d62828; }
+
+/* botão whatsapp */
+.finalizar {
+  width: 100%;
+  padding: 16px;
+  margin-top: 18px;
+  border-radius: 14px;
+  border: none;
+  font-size: 16px;
+  font-weight: bold;
+  background: #555;
+  color: #fff;
+}
+
+/* contraste inputs bloqueados */
+input:disabled {
+  color:#fff !important;
+  background:#1a2040 !important;
+  -webkit-text-fill-color:#fff !important;
+  opacity:1 !important;
+}
+</style>
+</head>
+
+<body>
+<div class="container">
+
+<h1>Escolha seu Kit Amakha Paris</h1>
+
+<select id="kit">
+{% for k,v in kits.items() %}
+<option value="{{k}}" data-preco="{{v}}">Kit {{k}} perfumes - R$ {{ "%.2f"|format(v) }}</option>
+{% endfor %}
+</select>
+
+<input id="busca" placeholder="Buscar perfume...">
+
+<div class="filters">
+<button class="active" onclick="filtrar('Todos',this)">Todos</button>
+<button onclick="filtrar('Masculino',this)">Masculino</button>
+<button onclick="filtrar('Feminino',this)">Feminino</button>
+<button onclick="filtrar('Unissex',this)">Unissex</button>
+<button onclick="filtrar('Infantil',this)">Infantil</button>
+</div>
+
+<div id="lista" class="lista"></div>
+
+<!-- CARD DO RESUMO -->
+<div id="resumo" class="resumo">
+
+  <div id="resumoConteudo"></div>
+
+  <button class="btn-danger" onclick="limparSelecao()">
+    Limpar seleção de perfumes
+  </button>
+
+</div>
+
+<!-- DADOS DO CLIENTE -->
+<div class="resumo">
+<h3>👤 Dados do Cliente</h3>
+
+<input id="cliente_nome" placeholder="Seu nome completo" required>
+<input id="cliente_tel" placeholder="WhatsApp (somente números)" required>
+</div>
+
+<!-- ENDEREÇO -->
+<div class="resumo">
+
+<h3>📍 Endereço de Entrega</h3>
+
+<input id="cep" placeholder="CEP (somente números)">
+<input id="rua" placeholder="Rua" disabled>
+<input id="numero" placeholder="Número">
+<input id="bairro" placeholder="Bairro" disabled>
+<input id="cidade" placeholder="Cidade" disabled>
+<input id="uf" placeholder="UF" disabled>
+<input id="complemento" placeholder="Complemento (opcional)">
+
+</div>
+
+<!-- FRETE -->
+<div class="resumo">
+<h3>🚚 Frete</h3>
+<div id="freteResultado">Informe o CEP para calcular</div>
+</div>
+
+<button id="btnWhats" class="finalizar" disabled>
+Selecione perfumes para continuar
+</button>
+
+</div>
+
+<script>
+const WHATSAPP = "{{ whatsapp }}";
+
+let perfumes = [];
+let selecionados = {};
+let filtroAtual = "Todos";
+let kit = parseInt(document.getElementById("kit").value);
+let freteEscolhido = null;
+
+/* ==================== FUNÇÕES ==================== */
+
+function totalSelecionados(){
+  return Object.values(selecionados).reduce((a,b)=>a+b,0);
+}
+
+function filtrar(cat,btn){
+  filtroAtual = cat;
+  document.querySelectorAll(".filters button")
+    .forEach(b=>b.classList.remove("active"));
+  btn.classList.add("active");
+  renderizar();
+}
+
+function renderizar(){
+
+  const lista = document.getElementById("lista");
+  lista.innerHTML = "";
+
+  const termo = busca.value.toLowerCase();
+
+  perfumes.forEach(p=>{
+
+    if(filtroAtual !== "Todos" && p.categoria !== filtroAtual) return;
+    if(!p.nome.toLowerCase().includes(termo)) return;
+
+    const q = selecionados[p.nome] || 0;
+
+    lista.innerHTML += `
+      <div class="item">
+        <div class="nome">
+          ${p.nome}
+          <span class="ml">${p.ml}</span><br>
+          <span class="tipo">${p.categoria}</span>
+        </div>
+        <div class="qtd">
+          <button onclick="alterar('${p.nome}',-1)">-</button>
+          <input value="${q}" onchange="digitar('${p.nome}',this.value)">
+          <button onclick="alterar('${p.nome}',1)">+</button>
+        </div>
+      </div>`;
+  });
+
+  atualizarResumo();
+}
+
+function alterar(nome,d){
+  const total = totalSelecionados();
+  if(d>0 && total>=kit) return;
+
+  selecionados[nome] = (selecionados[nome]||0)+d;
+  if(selecionados[nome]<=0) delete selecionados[nome];
+
+  renderizar();
+}
+
+function digitar(nome,v){
+  v = parseInt(v)||0;
+  const outros = totalSelecionados()-(selecionados[nome]||0);
+  if(outros+v>kit) v=kit-outros;
+
+  if(v<=0) delete selecionados[nome];
+  else selecionados[nome]=v;
+
+  renderizar();
+}
+
+document.getElementById("kit").addEventListener("change",e=>{
+  kit = parseInt(e.target.value);
+  const total = totalSelecionados();
+  if(total>kit){
+    alert(`Você já selecionou ${total} perfumes, mas o kit atual permite ${kit}.`);
+  }
+  atualizarResumo();
+  calcularFrete();
+});
+
+function limparSelecao(){
+  if(!confirm("Deseja limpar todos os perfumes selecionados?")) return;
+  selecionados = {};
+  renderizar();
+}
+
+/* ================= CEP + FRETE ================= */
+
+async function calcularFrete(){
+
+  const c = cep.value.replace(/\D/g,"");
+  if(c.length !== 8){
+    freteResultado.innerHTML = "Informe um CEP válido";
+    freteEscolhido = null;
+    return;
+  }
+
+  freteResultado.innerHTML = "Calculando frete...";
+
+  const body = { cep: c, kit: kit };
+
+  const resp = await fetch("/api/frete", {
+    method: "POST",
+    headers: {"Content-Type":"application/json"},
+    body: JSON.stringify(body)
+  });
+
+  const dados = await resp.json();
+
+  if(!Array.isArray(dados)){
+    freteResultado.innerHTML = "Não foi possível calcular o frete";
+    freteEscolhido = null;
+    return;
+  }
+
+  let opcoesValidas = dados
+    .map(op => ({
+      ...op,
+      price_num: parseFloat(op.valor)
+    }))
+    .sort((a,b) => a.price_num - b.price_num);
+
+  if(opcoesValidas.length === 0){
+    freteResultado.innerHTML = "Nenhum serviço disponível para este CEP";
+    freteEscolhido = null;
+    return;
+  }
+
+  let melhor = opcoesValidas[0];
+  freteEscolhido = melhor;
+
+  let html = `
+    <b>⭐ Melhor opção</b><br>
+    ${melhor.transportadora} — ${melhor.servico}<br>
+    Valor: R$ ${melhor.valor.toFixed(2)}<br>
+    Prazo: ${melhor.prazo_min} a ${melhor.prazo_max} dias
+    <hr>
+  `;
+
+  opcoesValidas.slice(1).forEach(op=>{
+    html += `
+      ${op.transportadora} — ${op.servico}<br>
+      Valor: R$ ${op.valor.toFixed(2)}<br>
+      Prazo: ${op.prazo_min} a ${op.prazo_max} dias<br><br>
+    `;
+  });
+
+  freteResultado.innerHTML = html;
+}
+
+cep.addEventListener("blur",()=>{
+
+  const c = cep.value.replace(/\D/g,"");
+  if(c.length!==8) return;
+
+  fetch(`https://viacep.com.br/ws/${c}/json/`)
+  .then(r=>r.json())
+  .then(d=>{
+    if(d.erro){ alert("CEP não encontrado"); return; }
+    rua.value=d.logradouro;
+    bairro.value=d.bairro;
+    cidade.value=d.localidade;
+    uf.value=d.uf;
+  });
+
+  calcularFrete();
+});
+
+/* ================= RESUMO ================= */
+
+function atualizarResumo(){
+
+  let masc=0,fem=0,uni=0,inf=0;
+  let linhas=[];
+
+  perfumes.forEach(p=>{
+    if(selecionados[p.nome]){
+      const q = selecionados[p.nome];
+      linhas.push(`- ${p.nome} (${p.ml}) x${q}`);
+
+      if(p.categoria==="Masculino") masc+=q;
+      if(p.categoria==="Feminino") fem+=q;
+      if(p.categoria==="Unissex") uni+=q;
+      if(p.categoria==="Infantil") inf+=q;
+    }
+  });
+
+  const total = totalSelecionados();
+  const faltam = kit-total;
+
+  resumoConteudo.innerHTML =
+    `<b>Total:</b> ${total}/${kit}<br>
+     Masculinos: ${masc} | Femininos: ${fem}<br>
+     Unissex: ${uni} | Infantil: ${inf}<br><br>
+     ${linhas.join("<br>")}`;
+
+  const btn = btnWhats;
+
+  if(faltam>0){
+    btn.disabled=true;
+    btn.style.background="#555";
+    btn.innerText = "Faltam "+faltam+" perfumes para completar o kit";
+    return;
+  }
+
+  if(total===0){
+    btn.disabled=true;
+    btn.style.background="#555";
+    btn.innerText="Selecione perfumes para continuar";
+    return;
+  }
+
+  btn.disabled=false;
+  btn.style.background="#23c483";
+  btn.innerText="Finalizar no WhatsApp";
+  btn.onclick=enviar;
+}
+
+/* ================= WHATSAPP + REGISTRO ================= */
+
+async function enviar(){
+
+  const nomeCliente = cliente_nome.value.trim();
+  if(!nomeCliente){
+    alert("Informe seu nome para continuar.");
+    return;
+  }
+
+  const telefoneCliente = cliente_tel.value.replace(/\D/g,"");
+  if(!telefoneCliente || telefoneCliente.length < 10){
+    alert("Informe um número de WhatsApp válido.");
+    return;
+  }
+
+  const kitOption = document.querySelector(`#kit option[value="${kit}"]`);
+  const kitPreco = parseFloat(kitOption.dataset.preco) || 0;
+  const valorTexto = kitOption.innerText.split("R$")[1];
+
+  const freteValor = freteEscolhido ? freteEscolhido.valor : 0;
+  const valorTotal = kitPreco + freteValor;
+
+  const perfumesList = [];
+  for(let nome in selecionados){
+    const p = perfumes.find(x => x.nome === nome);
+    if(p){
+      perfumesList.push({
+        nome: p.nome,
+        categoria: p.categoria,
+        quantidade: selecionados[nome]
+      });
+    }
+  }
+
+  const pedidoData = {
+    kit_quantidade: kit,
+    kit_preco: kitPreco,
+    cliente_nome: nomeCliente,
+    cliente_telefone: telefoneCliente,
+    cliente_cep: cep.value.replace(/\D/g,""),
+    cliente_cidade: cidade.value,
+    cliente_uf: uf.value,
+    frete_valor: freteValor,
+    frete_tipo: freteEscolhido
+      ? `${freteEscolhido.transportadora} - ${freteEscolhido.servico}`
+      : "",
+    valor_total: valorTotal,
+    perfumes: perfumesList
+  };
+
+  try {
+    fetch("/api/registrar-pedido", {
+      method: "POST",
+      headers: {"Content-Type":"application/json"},
+      body: JSON.stringify(pedidoData)
+    });
+  } catch(e){}
+
+  let txt =
+    "Olá! Gostaria de comprar:\n"+
+    "Kit "+kit+" perfumes Amakha Paris\n"+
+    "Valor: R$ "+valorTexto+"\n\n"+
+    "Cliente: "+nomeCliente+"\n"+
+    "Telefone: "+telefoneCliente+"\n\n";
+
+  for(let n in selecionados){
+    const p = perfumes.find(x=>x.nome===n);
+    txt += "- "+n+" ("+p.ml+") x"+selecionados[n]+"\n";
+  }
+
+  txt += "\nEndereço:\n"+
+    rua.value+", "+numero.value+"\n"+
+    bairro.value+" - "+cidade.value+"/"+uf.value+"\n"+
+    "CEP: "+cep.value+"\n\n";
+
+  txt += "Frete:\n"+freteResultado.innerText;
+
+  window.open("https://wa.me/"+WHATSAPP+"?text="+encodeURIComponent(txt));
+}
+
+/* ================= LOAD PERFUMES ================= */
+
+busca.oninput = renderizar;
+
+fetch("/api/perfumes")
+.then(r=>r.json())
+.then(d=>{
+  perfumes = d;
+  renderizar();
+});
+</script>
+
+</body>
+</html>

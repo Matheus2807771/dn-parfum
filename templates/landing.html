@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Amakha Paris • Monte seu Kit</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<style>
+body {
+  margin: 0;
+  font-family: "Segoe UI", Arial, sans-serif;
+  background: linear-gradient(180deg,#050816,#0b1022);
+  color: #fff;
+}
+
+.container {
+  max-width: 1200px;
+  margin: auto;
+  padding: 40px 20px;
+}
+
+/* ===== HERO ===== */
+.hero {
+  display: grid;
+  grid-template-columns: 1.1fr 1fr;
+  gap: 40px;
+  align-items: center;
+}
+
+.hero h1 {
+  font-size: 42px;
+  line-height: 1.1;
+}
+
+.hero h1 span {
+  color: #23c483;
+}
+
+.hero p {
+  color: #cfd3ff;
+  font-size: 18px;
+  margin: 20px 0 30px;
+}
+
+.cta {
+  display: inline-block;
+  padding: 16px 28px;
+  background: #23c483;
+  color: #000;
+  border-radius: 14px;
+  font-weight: bold;
+  font-size: 18px;
+  text-decoration: none;
+}
+
+/* ===== GRID FRASCOS (NOVA VITRINE) ===== */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 22px;
+  padding: 10px;
+}
+
+/* Card padrão */
+.grid-item {
+  background: linear-gradient(180deg,#0f1430,#0a0f2b);
+  border-radius: 16px;
+  padding: 14px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  box-shadow: 0 12px 28px rgba(0,0,0,.35);
+  transition: .25s ease;
+  border: 1px solid rgba(255,255,255,.06);
+}
+
+/* Destaque principal */
+.grid-item.destaque {
+  grid-column: span 2;
+  grid-row: span 2;
+  border: 2px solid #23c483;
+}
+
+/* hover premium */
+.grid-item:hover {
+  transform: translateY(-6px) scale(1.03);
+  box-shadow: 0 22px 44px rgba(0,0,0,.55);
+  border-color: #23c483;
+}
+
+/* imagem */
+.grid-item img {
+  width: 90%;
+  max-height: 220px;
+  object-fit: contain;
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 10px;
+}
+
+/* ===== BENEFÍCIOS ===== */
+.beneficios {
+  margin-top: 80px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 24px;
+}
+
+.card {
+  background: #141937;
+  border-radius: 18px;
+  padding: 24px;
+}
+
+.card h3 {
+  margin: 0 0 10px;
+}
+
+.card p {
+  color: #aaa;
+  font-size: 14px;
+}
+
+/* ===== CTA FINAL ===== */
+.final {
+  margin-top: 80px;
+  text-align: center;
+  background: linear-gradient(135deg,#23c483,#2ee59d);
+  color: #000;
+  padding: 50px 20px;
+  border-radius: 30px;
+}
+
+.final h2 {
+  font-size: 34px;
+  margin-bottom: 16px;
+}
+
+.final a {
+  margin-top: 20px;
+  display: inline-block;
+  padding: 16px 32px;
+  background: #000;
+  color: #23c483;
+  border-radius: 14px;
+  font-weight: bold;
+  text-decoration: none;
+}
+
+/* ===== RESPONSIVIDADE ===== */
+@media(max-width:900px){
+  .hero {
+    grid-template-columns: 1fr;
+    text-align: center;
+  }
+
+  .grid-item.destaque {
+    grid-column: span 2;
+  }
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+  <!-- HERO -->
+  <section class="hero">
+    <div>
+      <h1>
+        Monte seu <span>Kit Amakha Paris</span><br>
+        do seu jeito
+      </h1>
+
+      <p>
+        Escolha seus perfumes favoritos, misture fragrâncias
+        masculinas, femininas, unissex e infantis e finalize
+        diretamente no WhatsApp.
+      </p>
+
+      <a href="/kit" class="cta">Montar meu Kit agora</a>
+    </div>
+
+    <!-- GRID VITRINE -->
+    <div class="grid">
+
+      <div class="grid-item destaque">
+        <img src="/static/img_frascos_site/kit-best-sellers-masculino_0.webp" alt="Perfume Amakha Destaque">
+      </div>
+
+      <div class="grid-item">
+        <img src="/static/img_frascos_site/deo-colonia-feminino-521-vip-rose-15ml_0.jpg" alt="Perfume Amakha">
+      </div>
+
+      <div class="grid-item">
+        <img src="/static/img_frascos_site/deo-colonia-feminino-leternite-15ml_0.jpg" alt="Perfume Amakha">
+      </div>
+
+      <div class="grid-item">
+        <img src="/static/img_frascos_site/deo-colonia-masculino-amk-15ml_0.jpg" alt="Perfume Amakha">
+      </div>
+
+      <div class="grid-item">
+        <img src="/static/img_frascos_site/deo-colonia-feminino-emocoes-15ml_0.jpg" alt="Perfume Amakha">
+      </div>
+
+      <div class="grid-item">
+        <img src="/static/img_frascos_site/deo-colonia-feminino-521-vip-rose-15ml_0.jpg" alt="Perfume Amakha">
+      </div>
+
+      <div class="grid-item">
+        <img src="/static/img_frascos_site/deo-colonia-feminino-leternite-15ml_0.jpg" alt="Perfume Amakha">
+      </div>
+
+      <div class="grid-item">
+        <img src="/static/img_frascos_site/deo-colonia-masculino-amk-15ml_0.jpg" alt="Perfume Amakha">
+      </div>
+
+    </div>
+  </section>
+
+  <!-- BENEFÍCIOS -->
+  <section class="beneficios">
+    <div class="card">
+      <h3>✨ Mais de 100 fragrâncias</h3>
+      <p>Inspiradas nos perfumes mais vendidos do mundo.</p>
+    </div>
+
+    <div class="card">
+      <h3>📦 Kits personalizados</h3>
+      <p>Escolha quantidades e tipos conforme sua preferência.</p>
+    </div>
+
+    <div class="card">
+      <h3>💬 Compra rápida</h3>
+      <p>Finalize o pedido direto no WhatsApp.</p>
+    </div>
+
+    <div class="card">
+      <h3>🚀 Ideal para revenda</h3>
+      <p>Excelente custo-benefício para quem quer lucrar.</p>
+    </div>
+  </section>
+
+  <!-- CTA FINAL -->
+  <section class="final">
+    <h2>Pronto para montar seu kit?</h2>
+    <p>Escolha seus perfumes e receba atendimento imediato.</p>
+    <a href="/kit">Quero montar meu Kit</a>
+  </section>
+
+</div>
+
+</body>
+</html>

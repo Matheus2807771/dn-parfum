@@ -1,0 +1,19 @@
+# Python
+__pycache__/
+*.pyc
+
+# venv
+venv/
+.env
+.env.*
+
+# Logs
+*.log
+
+# IDE
+.vscode/
+.idea/
+
+# Dados locais
+config.json
+perfumes_fixos.json
