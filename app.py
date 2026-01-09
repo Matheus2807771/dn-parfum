@@ -1,9 +1,9 @@
 from flask import Flask, render_template, jsonify, request, redirect, url_for, session
 import json, os, requests, re, unicodedata
 import mercadopago
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta
 from supabase import create_client, Client
-from datetime import datetime, timedelta, timezone
+
 
 app = Flask(
     __name__,
@@ -599,12 +599,10 @@ def pagamento_pix():
     if not data:
         return {"erro": "JSON inválido ou ausente"}, 400
 
-    # Timezone Brasil (-03:00) SEM pytz
-    tz_br = timezone(timedelta(hours=-3))
-    expiration_dt = datetime.now(tz_br) + timedelta(minutes=30)
-
-    # FORMATO EXIGIDO PELO MERCADO PAGO
-    expiration = expiration_dt.strftime("%Y-%m-%dT%H:%M:%S-03:00")
+    # Hora Brasil (-0300) NO FORMATO EXATO DO MERCADO PAGO
+    expiration = (
+        datetime.utcnow() - timedelta(hours=3) + timedelta(minutes=30)
+    ).strftime("%Y-%m-%dT%H:%M:%S-0300")
 
     body = {
         "transaction_amount": float(data["valor"]),
