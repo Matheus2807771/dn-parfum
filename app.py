@@ -472,23 +472,40 @@ def admin_relatorio_resumo():
     if not session.get("admin_logged"):
         return {"erro": "Não autorizado"}, 401
 
-    hoje = datetime.now(timezone.utc).date()
+    # Brasil = UTC-3
+    hoje = (datetime.utcnow() - timedelta(hours=3)).date()
     mes_ini = hoje.replace(day=1)
 
-    pedidos = supabase.table("pedidos").select("*").execute().data
+    pedidos = supabase.table("pedidos").select("*").execute().data or []
 
-    valor_total = sum(to_float(p["valor_total"]) for p in pedidos)
-    total_pedidos = len(pedidos)
+    def data_pedido(p):
+        return datetime.fromisoformat(p["created_at"].replace("Z", "")).date()
 
-    pedidos_mes = [p for p in pedidos if p["created_at"][:10] >= str(mes_ini)]
-    valor_mes = sum(to_float(p["valor_total"]) for p in pedidos_mes)
+    valor_total = sum(
+        to_float(p.get("valor_total")) for p in pedidos
+    )
 
-    pedidos_hoje = [p for p in pedidos if p["created_at"][:10] == str(hoje)]
-    valor_hoje = sum(to_float(p["valor_total"]) for p in pedidos_hoje)
+    pedidos_mes = [
+        p for p in pedidos
+        if data_pedido(p) >= mes_ini
+    ]
+
+    valor_mes = sum(
+        to_float(p.get("valor_total")) for p in pedidos_mes
+    )
+
+    pedidos_hoje = [
+        p for p in pedidos
+        if data_pedido(p) == hoje
+    ]
+
+    valor_hoje = sum(
+        to_float(p.get("valor_total")) for p in pedidos_hoje
+    )
 
     return {
         "valor_total": valor_total,
-        "total_pedidos": total_pedidos,
+        "total_pedidos": len(pedidos),
         "valor_mes": valor_mes,
         "pedidos_mes": len(pedidos_mes),
         "valor_hoje": valor_hoje,
@@ -553,23 +570,34 @@ def admin_relatorio_perfumes():
 
 @app.route("/api/admin/relatorios/vendas-por-periodo")
 def admin_relatorio_periodo():
-    hoje = datetime.now(timezone.utc).date()
+    if not session.get("admin_logged"):
+        return {"erro": "Não autorizado"}, 401
+
+    # Ajuste para horário do Brasil (UTC-3)
+    hoje = (datetime.utcnow() - timedelta(hours=3)).date()
     inicio = hoje - timedelta(days=30)
 
-    pedidos = supabase.table("pedidos").select("*").execute().data
+    pedidos = supabase.table("pedidos").select("*").execute().data or []
 
     dias = {}
 
     for p in pedidos:
-        data = p["created_at"][:10]
-        if data < str(inicio):
+        try:
+            data_pedido = datetime.fromisoformat(
+                p["created_at"].replace("Z", "")
+            ).date()
+        except Exception:
             continue
 
-        dias[data] = dias.get(data, 0) + to_float(p["valor_total"])
+        if data_pedido < inicio:
+            continue
+
+        chave = data_pedido.isoformat()
+        dias[chave] = dias.get(chave, 0) + to_float(p.get("valor_total"))
 
     retorno = [
-        {"data": d, "valor": v}
-        for d, v in sorted(dias.items())
+        {"data": data, "valor": valor}
+        for data, valor in sorted(dias.items())
     ]
 
     return jsonify(retorno)
@@ -599,7 +627,6 @@ def pagamento_pix():
     if not data:
         return {"erro": "JSON inválido ou ausente"}, 400
 
-    # Hora Brasil (-0300) NO FORMATO EXATO DO MERCADO PAGO
     expiration = (
         datetime.utcnow() - timedelta(hours=3) + timedelta(minutes=30)
     ).strftime("%Y-%m-%dT%H:%M:%S-0300")
@@ -618,10 +645,7 @@ def pagamento_pix():
     result = sdk.payment().create(body)
 
     if result["status"] not in (200, 201):
-        return {
-            "erro": "Erro ao criar pagamento",
-            "detalhe": result
-        }, 500
+        return {"erro": "Erro ao criar pagamento", "detalhe": result}, 500
 
     pagamento = result["response"]
     pix = pagamento["point_of_interaction"]["transaction_data"]
@@ -633,6 +657,7 @@ def pagamento_pix():
         "qr_code_base64": pix["qr_code_base64"],
         "copiar_colar": pix["qr_code"]
     }
+
 # ================= WEBHOOK MERCADO PAGO =================
 
 @app.route("/webhook/mercadopago", methods=["POST"])
