@@ -598,9 +598,11 @@ def pagamento_pix():
     if not data:
         return {"erro": "JSON inválido ou ausente"}, 400
 
-    expiration = (
-        datetime.utcnow() + timedelta(minutes=30)
-    ).strftime("%Y-%m-%dT%H:%M:%S-0300")
+    # Timezone Brasil com offset correto (-03:00)
+    tz = pytz.timezone("America/Sao_Paulo")
+    expiration_dt = datetime.now(tz) + timedelta(minutes=30)
+
+    expiration = expiration_dt.strftime("%Y-%m-%dT%H:%M:%S-03:00")
 
     body = {
         "transaction_amount": float(data["valor"]),
@@ -631,7 +633,6 @@ def pagamento_pix():
         "qr_code_base64": pix["qr_code_base64"],
         "copiar_colar": pix["qr_code"]
     })
-
 
 # ================= WEBHOOK MERCADO PAGO =================
 
