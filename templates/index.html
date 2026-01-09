@@ -260,10 +260,16 @@ function renderizar(){
           <span class="ml">${p.ml}</span><br>
           <span class="tipo">${p.categoria}</span>
         </div>
+
         <div class="qtd">
-          <button onclick="alterar('${p.nome}',-1)">-</button>
-          <input value="${q}" onchange="digitar('${p.nome}',this.value)">
-          <button onclick="alterar('${p.nome}',1)">+</button>
+
+          <button onclick='alterar(${JSON.stringify(p.nome)},-1)'>-</button>
+
+          <input value="${q}"
+            onchange='digitar(${JSON.stringify(p.nome)},this.value)'>
+
+          <button onclick='alterar(${JSON.stringify(p.nome)},1)'>+</button>
+
         </div>
       </div>`;
   });
