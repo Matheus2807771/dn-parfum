@@ -599,9 +599,12 @@ def pagamento_pix():
     if not data:
         return {"erro": "JSON inválido ou ausente"}, 400
 
+    # Timezone Brasil (-03:00)
+    tz_brasil = timezone(timedelta(hours=-3))
+
     expiration = (
-        datetime.utcnow() + timedelta(minutes=30)
-    ).strftime("%Y-%m-%dT%H:%M:%SZ")
+        datetime.now(tz_brasil) + timedelta(minutes=30)
+    ).isoformat()
 
     body = {
         "transaction_amount": float(data["valor"]),
