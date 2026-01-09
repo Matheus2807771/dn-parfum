@@ -591,7 +591,6 @@ def status_pagamento(payment_id):
     return {"status": pagamento["status"]}
 
 # ================= PAGAMENTO PIX =================
-
 @app.route("/api/pagamentos/pix", methods=["POST"])
 def pagamento_pix():
     data = request.get_json(silent=True)
@@ -599,12 +598,9 @@ def pagamento_pix():
     if not data:
         return {"erro": "JSON inválido ou ausente"}, 400
 
-    # Timezone Brasil (-03:00)
-    tz_brasil = timezone(timedelta(hours=-3))
-
     expiration = (
-        datetime.now(tz_brasil) + timedelta(minutes=30)
-    ).isoformat()
+        datetime.utcnow() + timedelta(minutes=30)
+    ).strftime("%Y-%m-%dT%H:%M:%S-0300")
 
     body = {
         "transaction_amount": float(data["valor"]),
@@ -635,6 +631,7 @@ def pagamento_pix():
         "qr_code_base64": pix["qr_code_base64"],
         "copiar_colar": pix["qr_code"]
     })
+
 
 # ================= WEBHOOK MERCADO PAGO =================
 
