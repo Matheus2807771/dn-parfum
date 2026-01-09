@@ -594,7 +594,14 @@ def status_pagamento(payment_id):
 
 @app.route("/api/pagamentos/pix", methods=["POST"])
 def pagamento_pix():
-    data = request.get_json(force=True)
+    data = request.get_json(silent=True)
+
+    if not data:
+        return {"erro": "JSON inválido ou ausente"}, 400
+
+    expiration = (
+        datetime.utcnow() + timedelta(minutes=30)
+    ).strftime("%Y-%m-%dT%H:%M:%SZ")
 
     body = {
         "transaction_amount": float(data["valor"]),
@@ -604,9 +611,7 @@ def pagamento_pix():
             "email": data["email"]
         },
         "external_reference": str(data["pedido_id"]),
-        "date_of_expiration": (
-            datetime.utcnow() + timedelta(minutes=30)
-        ).isoformat()
+        "date_of_expiration": expiration
     }
 
     result = sdk.payment().create(body)
