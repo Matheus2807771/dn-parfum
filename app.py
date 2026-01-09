@@ -1,6 +1,7 @@
 from flask import Flask, render_template, jsonify, request, redirect, url_for, session
 import json, os, requests, re, unicodedata
 import mercadopago
+from datetime import datetime, timedelta, timezone
 from supabase import create_client, Client
 from datetime import datetime, timedelta, timezone
 
@@ -598,10 +599,11 @@ def pagamento_pix():
     if not data:
         return {"erro": "JSON inválido ou ausente"}, 400
 
-    # Timezone Brasil com offset correto (-03:00)
-    tz = pytz.timezone("America/Sao_Paulo")
-    expiration_dt = datetime.now(tz) + timedelta(minutes=30)
+    # Timezone Brasil (-03:00) SEM pytz
+    tz_br = timezone(timedelta(hours=-3))
+    expiration_dt = datetime.now(tz_br) + timedelta(minutes=30)
 
+    # FORMATO EXIGIDO PELO MERCADO PAGO
     expiration = expiration_dt.strftime("%Y-%m-%dT%H:%M:%S-03:00")
 
     body = {
@@ -626,14 +628,13 @@ def pagamento_pix():
     pagamento = result["response"]
     pix = pagamento["point_of_interaction"]["transaction_data"]
 
-    return jsonify({
+    return {
         "payment_id": pagamento["id"],
         "status": pagamento["status"],
         "qr_code": pix["qr_code"],
         "qr_code_base64": pix["qr_code_base64"],
         "copiar_colar": pix["qr_code"]
-    })
-
+    }
 # ================= WEBHOOK MERCADO PAGO =================
 
 @app.route("/webhook/mercadopago", methods=["POST"])
