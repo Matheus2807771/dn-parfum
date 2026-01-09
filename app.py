@@ -627,9 +627,10 @@ def pagamento_pix():
     if not data:
         return {"erro": "JSON inválido ou ausente"}, 400
 
+    # 🔥 FORMATO EXATO EXIGIDO PELO MERCADO PAGO (PIX)
     expiration = (
         datetime.utcnow() - timedelta(hours=3) + timedelta(minutes=30)
-    ).strftime("%Y-%m-%dT%H:%M:%S-0300")
+    ).strftime("%Y-%m-%dT%H:%M:%S-03:00")
 
     body = {
         "transaction_amount": float(data["valor"]),
@@ -645,19 +646,21 @@ def pagamento_pix():
     result = sdk.payment().create(body)
 
     if result["status"] not in (200, 201):
-        return {"erro": "Erro ao criar pagamento", "detalhe": result}, 500
+        return {
+            "erro": "Erro ao criar pagamento",
+            "detalhe": result
+        }, 500
 
     pagamento = result["response"]
     pix = pagamento["point_of_interaction"]["transaction_data"]
 
-    return {
+    return jsonify({
         "payment_id": pagamento["id"],
         "status": pagamento["status"],
         "qr_code": pix["qr_code"],
         "qr_code_base64": pix["qr_code_base64"],
         "copiar_colar": pix["qr_code"]
-    }
-
+    })
 # ================= WEBHOOK MERCADO PAGO =================
 
 @app.route("/webhook/mercadopago", methods=["POST"])
