@@ -575,6 +575,13 @@ def admin_relatorio_pedidos():
     return jsonify(pedidos)
 
 
+@app.route("/api/pagamentos/status/<payment_id>")
+def status_pagamento(payment_id):
+    pagamento = sdk.payment().get(payment_id)["response"]
+    return {"status": pagamento["status"]}
+
+
+
 # ================= RUN =================
 
 if __name__ == "__main__":

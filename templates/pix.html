@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <title>Pagamento PIX</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <style>
+    body {
+      font-family: Arial, Helvetica, sans-serif;
+      background: #0f172a;
+      color: #fff;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+    }
+
+    .card {
+      background: #111827;
+      padding: 24px;
+      border-radius: 12px;
+      width: 100%;
+      max-width: 420px;
+      box-shadow: 0 0 30px rgba(0,0,0,.4);
+    }
+
+    h1 {
+      text-align: center;
+      margin-bottom: 10px;
+    }
+
+    .price {
+      text-align: center;
+      font-size: 22px;
+      margin-bottom: 20px;
+      color: #22c55e;
+    }
+
+    .qr {
+      text-align: center;
+      margin: 20px 0;
+    }
+
+    .qr img {
+      width: 240px;
+      height: 240px;
+      background: #fff;
+      padding: 10px;
+      border-radius: 8px;
+    }
+
+    textarea {
+      width: 100%;
+      resize: none;
+      height: 90px;
+      border-radius: 8px;
+      border: none;
+      padding: 10px;
+      font-size: 13px;
+      margin-top: 10px;
+    }
+
+    button {
+      width: 100%;
+      margin-top: 12px;
+      padding: 12px;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+
+    .btn-primary {
+      background: #22c55e;
+      color: #000;
+      font-weight: bold;
+    }
+
+    .status {
+      text-align: center;
+      margin-top: 15px;
+      font-size: 14px;
+    }
+
+    .pending { color: #facc15; }
+    .approved { color: #22c55e; }
+    .error { color: #ef4444; }
+  </style>
+</head>
+
+<body>
+  <div class="card">
+    <h1>Pagamento via PIX</h1>
+    <div class="price">R$ <span id="valor">49,90</span></div>
+
+    <div class="qr" id="qr-container">
+      <p>Gerando QR Code...</p>
+    </div>
+
+    <textarea id="pix-code" readonly></textarea>
+
+    <button class="btn-primary" onclick="copiarPix()">Copiar código PIX</button>
+
+    <div class="status pending" id="status">Aguardando pagamento...</div>
+  </div>
+
+  <script>
+    let paymentId = null;
+    let pollInterval = null;
+
+    async function criarPagamentoPix() {
+      const response = await fetch("/api/pagamentos/pix", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          valor: 49.90,
+          descricao: "Compra DN Parfum",
+          email: "cliente@email.com",
+          pedido_id: "PEDIDO_12345"
+        })
+      });
+
+      const data = await response.json();
+      paymentId = data.payment_id;
+
+      document.getElementById("qr-container").innerHTML = `
+        <img src="data:image/png;base64,${data.qr_code_base64}" />
+      `;
+
+      document.getElementById("pix-code").value = data.copiar_colar;
+
+      iniciarPolling();
+    }
+
+    function copiarPix() {
+      const textarea = document.getElementById("pix-code");
+      textarea.select();
+      document.execCommand("copy");
+      alert("Código PIX copiado!");
+    }
+
+    function iniciarPolling() {
+      pollInterval = setInterval(async () => {
+        const res = await fetch(`/api/pagamentos/status/${paymentId}`);
+        const data = await res.json();
+
+        const statusEl = document.getElementById("status");
+
+        if (data.status === "approved") {
+          statusEl.textContent = "Pagamento aprovado!";
+          statusEl.className = "status approved";
+          clearInterval(pollInterval);
+        }
+      }, 5000);
+    }
+
+    criarPagamentoPix();
+  </script>
+</body>
+</html>

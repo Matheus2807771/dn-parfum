@@ -14,3 +14,10 @@ pydantic==2.5.3
 python-dotenv==1.0.1
 requests==2.31.0
 
+mercadopago==2.2.3
+
+##Teste
+MP_ACCESS_TOKEN=TEST_xxxxxxxxxxxxxxxxx
+
+#Produção
+#MP_ACCESS_TOKEN=APP_USR_xxxxxxxxxxxxxxxxx
