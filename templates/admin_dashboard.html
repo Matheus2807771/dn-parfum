@@ -30,7 +30,7 @@ body{font-family:'Segoe UI',Arial,sans-serif;background:#0b1022;color:#fff;min-h
 
 /* Tabelas */
 table{width:100%;border-collapse:collapse}
-th,td{padding:10px;border-bottom:1px solid #2b3055;text-align:left}
+th,td{padding:10px;border-bottom:1px solid #2b3055;text-align:left;vertical-align:top}
 th{color:#23c483}
 
 /* Botões */
@@ -45,9 +45,10 @@ th{color:#23c483}
 .form-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-top:12px}
 .field{display:flex;flex-direction:column;gap:6px}
 .field label{font-size:13px;color:#9aa3c7}
-.field input,.field select{
+.field input,.field select, .field textarea{
   padding:10px;border-radius:10px;border:1px solid #2b3055;background:#0b1022;color:#fff
 }
+.field textarea{min-height:90px;resize:vertical}
 .actions-row{display:flex;gap:10px;align-items:center;margin-top:12px;flex-wrap:wrap}
 .inline-input{padding:8px;border-radius:8px;border:1px solid #2b3055;background:#0b1022;color:#fff}
 
@@ -56,7 +57,7 @@ th{color:#23c483}
 .badge-on{background:#23c483;color:#000}
 .badge-off{background:#2b3055;color:#fff}
 
-/* ===== RANKING PROFISSIONAL ===== */
+/* ===== RANKING ===== */
 .ranking-grid{
   display:grid;
   grid-template-columns:repeat(auto-fill,minmax(220px,1fr));
@@ -69,27 +70,58 @@ th{color:#23c483}
   border-radius:14px;
   padding:16px;
 }
-.ranking-pos{
-  color:#23c483;
-  font-weight:700;
-  font-size:13px;
-  margin-bottom:6px;
+.ranking-pos{color:#23c483;font-weight:700;font-size:13px;margin-bottom:6px}
+.ranking-nome{font-size:15px;font-weight:600}
+.ranking-qtd{font-size:13px;color:#9aa3c7;margin-top:4px}
+
+/* ===== MODAL ENTREGA ===== */
+.modal-backdrop{
+  display:none;
+  position:fixed; inset:0;
+  background:rgba(0,0,0,.65);
+  z-index:999;
+  align-items:center;
+  justify-content:center;
+  padding:18px;
 }
-.ranking-nome{
-  font-size:15px;
-  font-weight:600;
+.modal{
+  width:100%;
+  max-width:820px;
+  background:#141937;
+  border:1px solid #2b3055;
+  border-radius:16px;
+  padding:18px;
 }
-.ranking-qtd{
-  font-size:13px;
-  color:#9aa3c7;
-  margin-top:4px;
+.modal-header{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-bottom:12px;
 }
+.modal-title{font-size:18px;color:#23c483;font-weight:700}
+.modal-close{
+  background:#2b3055;color:#fff;border:none;border-radius:10px;
+  padding:8px 12px;cursor:pointer;font-weight:700
+}
+.modal-grid{
+  display:grid;
+  grid-template-columns:repeat(2,1fr);
+  gap:12px;
+}
+.modal-grid .field{margin-top:0}
+.modal-footer{
+  display:flex;
+  gap:10px;
+  justify-content:flex-end;
+  margin-top:14px;
+  flex-wrap:wrap;
+}
+.small-muted{color:#9aa3c7;font-size:12px}
 </style>
 </head>
 
 <body>
 
-<!-- HEADER -->
 <div class="header">
   <h1>Painel Administrativo - Amakha Paris</h1>
   <div class="header-links">
@@ -100,7 +132,6 @@ th{color:#23c483}
 
 <div class="container">
 
-<!-- TABS -->
 <div class="tabs">
   <button class="tab-btn active" onclick="showTab('relatorios',this)">Relatórios</button>
   <button class="tab-btn" onclick="showTab('kits',this)">Kits</button>
@@ -108,10 +139,8 @@ th{color:#23c483}
   <button class="tab-btn" onclick="showTab('config',this)">Configurações</button>
 </div>
 
-<!-- ================= RELATÓRIOS ================= -->
 <div id="tab-relatorios" class="tab-content active">
 
-  <!-- KPIs -->
   <div class="form-grid">
     <div class="card">
       <h4>Hoje</h4>
@@ -133,7 +162,6 @@ th{color:#23c483}
     </div>
   </div>
 
-  <!-- GRÁFICO -->
   <div class="card">
     <h3>Vendas por Período (últimos 30 dias)</h3>
     <div class="chart-wrapper">
@@ -141,7 +169,6 @@ th{color:#23c483}
     </div>
   </div>
 
-  <!-- RANKINGS -->
   <div class="card">
     <h3>Perfumes Mais Vendidos</h3>
     <div id="ranking-perfumes" class="ranking-grid"></div>
@@ -150,23 +177,24 @@ th{color:#23c483}
     <div id="ranking-kits" class="ranking-grid"></div>
   </div>
 
-  <!-- PEDIDOS -->
   <div class="card">
     <h3>Pedidos Recentes</h3>
     <table>
       <thead>
         <tr>
           <th>ID</th><th>Data</th><th>Kit</th><th>Cliente</th>
-          <th>Whats</th><th>Cidade</th><th>Valor</th><th>Status</th>
+          <th>Whats</th><th>Endereço</th><th>Valor</th><th>Status</th><th>Ações</th>
         </tr>
       </thead>
       <tbody id="lista-pedidos"></tbody>
     </table>
+    <div class="small-muted" style="margin-top:10px">
+      Entrega é definida no Admin (modal “Entrega”). O site não calcula frete.
+    </div>
   </div>
 
 </div>
 
-<!-- ================= KITS ================= -->
 <div id="tab-kits" class="tab-content">
   <div class="card">
     <h2>Kits</h2>
@@ -199,7 +227,6 @@ th{color:#23c483}
   </div>
 </div>
 
-<!-- ================= PERFUMES ================= -->
 <div id="tab-perfumes" class="tab-content">
   <div class="card">
     <h2>Perfumes</h2>
@@ -239,7 +266,6 @@ th{color:#23c483}
   </div>
 </div>
 
-<!-- ================= CONFIG ================= -->
 <div id="tab-config" class="tab-content">
   <div class="card">
     <h2>Configurações</h2>
@@ -267,7 +293,47 @@ th{color:#23c483}
 
 </div>
 
-<!-- JS -->
+<!-- MODAL ENTREGA -->
+<div id="modalEntregaBackdrop" class="modal-backdrop">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="modalEntregaTitle">Entrega</div>
+      <button class="modal-close" onclick="fecharModalEntrega()">Fechar</button>
+    </div>
+
+    <div class="modal-grid">
+      <div class="field">
+        <label>Transportadora / Tipo</label>
+        <input id="entrega_tipo" placeholder="Ex: Correios PAC / Motoboy / Retirada">
+      </div>
+      <div class="field">
+        <label>Valor do frete (R$)</label>
+        <input id="entrega_valor" type="number" step="0.01" placeholder="0.00">
+      </div>
+      <div class="field" style="grid-column:span 2">
+        <label>Observação</label>
+        <textarea id="entrega_obs" placeholder="Ex: postar amanhã; prazo 4-6 dias; combinar horário"></textarea>
+      </div>
+      <div class="field" style="grid-column:span 2">
+        <label>Status após salvar</label>
+        <select id="entrega_status">
+          <option value="">(não alterar)</option>
+          <option value="pendente">pendente</option>
+          <option value="confirmado">confirmado</option>
+          <option value="cancelado">cancelado</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="fecharModalEntrega()">Cancelar</button>
+      <button class="btn btn-primary" onclick="salvarEntregaModal()">Salvar Entrega</button>
+    </div>
+
+    <div class="small-muted" id="entrega_msg" style="margin-top:10px"></div>
+  </div>
+</div>
+
 <script src="/static/admin/relatorios.js"></script>
 <script src="/static/admin/kits.js"></script>
 <script src="/static/admin/perfumes.js"></script>

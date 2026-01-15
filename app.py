@@ -213,11 +213,19 @@ def registrar_pedido():
             "cliente_cep": data.get("cliente_cep", ""),
             "cliente_cidade": data.get("cliente_cidade", ""),
             "cliente_uf": data.get("cliente_uf", ""),
+
+            # Endereço completo (só funciona se você rodou o SQL no Supabase)
+            "cliente_rua": data.get("cliente_rua", ""),
+            "cliente_numero": data.get("cliente_numero", ""),
+            "cliente_bairro": data.get("cliente_bairro", ""),
+            "cliente_complemento": data.get("cliente_complemento", ""),
+
             "frete_valor": float(data.get("frete_valor", 0)),
             "frete_tipo": data.get("frete_tipo", ""),
             "valor_total": float(data.get("valor_total", 0)),
             "status": "pendente"
         }
+
 
         result = supabase.table("pedidos").insert(pedido).execute()
         pedido_id = result.data[0]["id"]
@@ -574,6 +582,77 @@ def admin_relatorio_pedidos():
 
     return jsonify(pedidos)
 
+# ================= ADMIN — ENTREGA (FRETE DEFINIDO NO ADMIN) =================
+
+@app.route("/api/admin/pedidos/<int:pedido_id>/entrega", methods=["PUT"])
+def admin_atualizar_entrega(pedido_id):
+    """
+    Define entrega no admin:
+    Espera JSON:
+    {
+      "frete_valor": 19.9,
+      "frete_tipo": "Correios PAC",
+      "observacao_entrega": "Postar amanhã",
+      "status": "confirmado"  (opcional)
+    }
+    """
+    if not session.get("admin_logged"):
+        return {"erro": "Não autorizado"}, 401
+
+    data = request.json or {}
+
+    frete_valor = 0.0
+    try:
+        frete_valor = float(data.get("frete_valor", 0) or 0)
+    except Exception:
+        frete_valor = 0.0
+
+    frete_tipo = (data.get("frete_tipo") or "").strip()
+    observacao = (data.get("observacao_entrega") or "").strip()
+    novo_status = (data.get("status") or "").strip().lower()  # opcional
+
+    # Busca kit_preco para recalcular valor_total
+    pedido_resp = (
+        supabase
+        .table("pedidos")
+        .select("kit_preco")
+        .eq("id", pedido_id)
+        .limit(1)
+        .execute()
+    )
+
+    if not pedido_resp.data:
+        return {"erro": "Pedido não encontrado"}, 404
+
+    kit_preco = 0.0
+    try:
+        kit_preco = float(pedido_resp.data[0].get("kit_preco") or 0)
+    except Exception:
+        kit_preco = 0.0
+
+    valor_total = kit_preco + frete_valor
+
+    payload_update = {
+        "frete_valor": frete_valor,
+        "frete_tipo": frete_tipo,
+        "valor_total": valor_total,
+    }
+
+    # Só atualiza se o campo existir no banco (se não existir, Supabase pode falhar).
+    # Se você rodou o SQL recomendado, pode salvar observacao_entrega.
+    if observacao:
+        payload_update["observacao_entrega"] = observacao
+
+    # Status opcional (se vazio, não mexe)
+    if novo_status in ["pendente", "confirmado", "cancelado"]:
+        payload_update["status"] = novo_status
+
+    supabase.table("pedidos") \
+        .update(payload_update) \
+        .eq("id", pedido_id) \
+        .execute()
+
+    return {"sucesso": True, "pedido_id": pedido_id, "valor_total": valor_total}
 
 # ================= RUN =================
 
