@@ -1,6 +1,5 @@
 from flask import Flask, render_template, jsonify, request, redirect, url_for, session
 import json, os, requests, re, unicodedata
-import mercadopago
 from datetime import datetime, timedelta
 from supabase import create_client, Client
 
@@ -22,15 +21,6 @@ SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJ
 
 
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
-
-# ================= MERCADO PAGO =================
-
-MP_ACCESS_TOKEN = os.getenv("MP_ACCESS_TOKEN")
-
-if not MP_ACCESS_TOKEN:
-    raise RuntimeError("MP_ACCESS_TOKEN não configurado")
-
-sdk = mercadopago.SDK(MP_ACCESS_TOKEN)
 
 # ================= CONFIG =================
 
@@ -692,74 +682,6 @@ def admin_atualizar_entrega(pedido_id):
         .execute()
 
     return {"sucesso": True, "pedido_id": pedido_id, "valor_total": valor_total}
-
-@app.route("/api/pagamentos/status/<payment_id>")
-def status_pagamento(payment_id):
-    pagamento = sdk.payment().get(payment_id)["response"]
-    return {"status": pagamento["status"]}
-
-# ================= PAGAMENTO PIX =================
-@app.route("/api/pagamentos/pix", methods=["POST"])
-def pagamento_pix():
-    data = request.get_json(silent=True)
-
-    if not data:
-        return {"erro": "JSON inválido ou ausente"}, 400
-
-    # 🔥 FORMATO EXATO EXIGIDO PELO MERCADO PAGO (PIX)
-    expiration = (
-        datetime.utcnow() - timedelta(hours=3) + timedelta(minutes=30)
-    ).strftime("%Y-%m-%dT%H:%M:%S-03:00")
-
-    body = {
-        "transaction_amount": float(data["valor"]),
-        "description": data.get("descricao", "Pedido DN Parfum"),
-        "payment_method_id": "pix",
-        "payer": {
-            "email": data["email"]
-        },
-        "external_reference": str(data["pedido_id"]),
-        "date_of_expiration": expiration
-    }
-
-    result = sdk.payment().create(body)
-
-    if result["status"] not in (200, 201):
-        return {
-            "erro": "Erro ao criar pagamento",
-            "detalhe": result
-        }, 500
-
-    pagamento = result["response"]
-    pix = pagamento["point_of_interaction"]["transaction_data"]
-
-    return jsonify({
-        "payment_id": pagamento["id"],
-        "status": pagamento["status"],
-        "qr_code": pix["qr_code"],
-        "qr_code_base64": pix["qr_code_base64"],
-        "copiar_colar": pix["qr_code"]
-    })
-# ================= WEBHOOK MERCADO PAGO =================
-
-@app.route("/webhook/mercadopago", methods=["POST"])
-def webhook_mercadopago():
-    payload = request.json or {}
-
-    if payload.get("type") == "payment":
-        payment_id = payload["data"]["id"]
-        pagamento = sdk.payment().get(payment_id)["response"]
-
-        status = pagamento["status"]
-        referencia = pagamento.get("external_reference")
-
-        if status == "approved" and referencia:
-            supabase.table("pedidos") \
-                .update({"status": "confirmado"}) \
-                .eq("id", referencia) \
-                .execute()
-
-    return "OK", 200
 
 
 # ================= RUN =================
